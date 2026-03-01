@@ -1,0 +1,174 @@
+import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "Fiber Guard IA - v2.0 Autonomous Protection";
+    preferred-width: 900px;
+    preferred-height: 700px;
+    background: #121212;
+
+    // --- PROPRIETÀ DI CONTROLLO ---
+    property <bool> sidebar_open: true;
+    property <string> active_tab: "home";
+    
+    in-out property <string> last_update_date: "18/12/2025 - 08:27"; 
+    in-out property <bool> realtime_active: true;
+    
+    // Questa proprietà ora ospita lo storico delle analisi automatiche
+    in-out property <string> scan_results: "Nessuna attività recente...";
+    in-out property <int> network_suspicious_count: 0;
+    
+    // Proprietà per i log dinamici della rete
+    in-out property <string> network_logs: "In attesa di traffico dalla fibra...";
+    
+    // Avanzamento gestito solo dall'IA
+    in-out property <float> scan_progress: 0.0;
+
+    callback termina_scansione(); // Permette di fermare l'IA se necessario
+    callback aggiorna_firme();
+
+    HorizontalLayout {
+        spacing: 0;
+
+        // --- 1. SIDEBAR ---
+        Rectangle {
+            width: sidebar_open ? 200px : 70px;
+            background: #1e1e1e;
+            animate width { duration: 200ms; easing: ease-in-out; }
+
+            VerticalLayout {
+                padding: 12px;
+                spacing: 15px;
+                alignment: start;
+
+                TouchArea {
+                    height: 45px;
+                    clicked => { sidebar_open = !sidebar_open; }
+                    Rectangle {
+                        background: #333;
+                        border-radius: 6px;
+                        Text { text: "☰"; font-size: 22px; color: white; horizontal-alignment: center; vertical-alignment: center; }
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 8px;
+                    Button { text: sidebar_open ? "🏠 Dashboard" : "🏠"; clicked => { active_tab = "home"; } }
+                    // Cambiato nome: ora è uno Storico Analisi
+                    Button { text: sidebar_open ? "📜 Storico IA" : "📜"; clicked => { active_tab = "scan"; } }
+                    Button { text: sidebar_open ? "🌐 Rete IA" : "🌐"; clicked => { active_tab = "network"; } }
+                    Button { text: sidebar_open ? "🛡️ Quarantena" : "🛡️"; clicked => { active_tab = "quarantine"; } }
+                }
+            }
+        }
+
+        // --- 2. MAIN CONTENT ---
+        VerticalLayout {
+            padding: 35px;
+            alignment: start; 
+            
+            Text {
+                text: active_tab == "home" ? "PANORAMICA SISTEMA" : 
+                      active_tab == "scan" ? "STORICO ANALISI IA" : 
+                      active_tab == "network" ? "MONITORAGGIO RETE" : "QUARANTENA SICURA";
+                font-size: 28px; color: #00d4ff; font-weight: 800;
+            }
+
+            VerticalLayout {
+                padding-top: 15px; padding-bottom: 25px;
+                Rectangle { height: 2px; background: #333; }
+            }
+
+            // --- HOME ---
+            if (active_tab == "home") : VerticalLayout {
+                spacing: 20px;
+                Rectangle {
+                    background: #1e1e1e; border-radius: 10px; height: 80px;
+                    HorizontalLayout {
+                        padding: 25px;
+                        Text { text: "🛡️ Protezione IA Autonoma:"; color: white; vertical-alignment: center; font-size: 16px; }
+                        Rectangle { width: 10px; }
+                        Text { text: realtime_active ? "ATTIVA" : "OFFLINE"; color: realtime_active ? #00ff00 : #ff4444; font-weight: 900; vertical-alignment: center; }
+                    }
+                }
+                Button { text: "AGGIORNA DATABASE IA (ULTIMO: " + last_update_date + ")"; primary: true; height: 55px; clicked => { root.aggiorna_firme(); } }
+                Text { text: "Il sistema monitora la fibra e lancia analisi automatiche in caso di minaccia."; color: #00d4ff; font-italic: true; horizontal-alignment: center; }
+            }
+
+            // --- SEZIONE STORICO (Ex Scansione) ---
+            if (active_tab == "scan") : VerticalLayout {
+                spacing: 15px;
+                Text { text: "Attività del motore di analisi automatica:"; color: #aaa; font-size: 14px; }
+                
+                // Barra di avanzamento gestita dall'attività automatica
+                VerticalLayout {
+                    spacing: 5px;
+                    Text { 
+                        text: scan_progress > 0 && scan_progress < 1 ? "Analisi automatica in corso: " + Math.round(scan_progress * 100) + "%" : "Motore in attesa..."; 
+                        color: scan_progress > 0 ? #00ff00 : #00d4ff; 
+                    }
+                    Rectangle {
+                        height: 8px; border-radius: 4px; background: #1a1a1a;
+                        Rectangle {
+                            x: 0; width: parent.width * scan_progress; height: parent.height;
+                            background: #00ff00; border-radius: 4px;
+                            animate width { duration: 150ms; }
+                        }
+                    }
+                }
+
+                // Pulsante Termina visibile solo se l'IA sta lavorando
+                if (scan_progress > 0 && scan_progress < 1) : Button { 
+                    text: "SOSPENDE ANALISI AUTOMATICA"; 
+                    height: 40px;
+                    clicked => { root.termina_scansione(); }
+                }
+
+                Rectangle {
+                    background: #000; border-radius: 8px; height: 350px; border-width: 1px; border-color: #222;
+                    VerticalLayout {
+                        padding: 12px;
+                        Text { text: scan_results; color: #00ff00; font-family: "Monospace"; font-size: 13px; wrap: word-wrap; }
+                    }
+                }
+            }
+
+            // --- RETE IA ---
+            if (active_tab == "network") : VerticalLayout {
+                spacing: 20px;
+                HorizontalLayout {
+                    spacing: 15px; height: 100px;
+                    Rectangle {
+                        background: #1a1a1a; border-radius: 8px; border-width: 1px; border-color: #333;
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Sensore Fibra"; color: #aaa; horizontal-alignment: center; font-size: 14px; }
+                            Text { text: "ONLINE"; color: #00ff00; horizontal-alignment: center; font-size: 22px; font-weight: 900; }
+                        }
+                    }
+                    Rectangle {
+                        background: network_suspicious_count > 0 ? #4a1515 : #1a1a1a; border-radius: 8px; border-width: 1px; border-color: network_suspicious_count > 0 ? #ff4444 : #333;
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Anomalie Rilevate"; color: #ff8888; horizontal-alignment: center; font-size: 14px; }
+                            Text { text: network_suspicious_count; color: white; horizontal-alignment: center; font-size: 24px; font-weight: 900; }
+                        }
+                    }
+                }
+                Rectangle {
+                    background: #000; border-radius: 8px; border-width: 1px; border-color: #222; height: 250px;
+                    VerticalLayout {
+                        padding: 12px;
+                        Text { text: network_logs; color: #00d4ff; font-family: "Monospace"; font-size: 13px; wrap: word-wrap; }
+                    }
+                }
+            }
+            
+            // --- QUARANTENA ---
+            if (active_tab == "quarantine") : VerticalLayout {
+                alignment: center; spacing: 10px;
+                Text { text: "🗄️ Nessun file sospetto in quarantena."; color: #666; horizontal-alignment: center; }
+            }
+            Rectangle {} 
+        }
+    }
+}

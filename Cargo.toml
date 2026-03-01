@@ -1,0 +1,46 @@
+[package]
+name = "fiber_guard_core"
+version = "2.0.0"
+edition = "2021"
+authors = ["Biacca"]
+description = "Antivirus IA con protezione real-time e monitoraggio rete"
+
+[dependencies]
+rfd = "0.14"
+# --- Interfaccia Grafica (Slint v1.5) ---
+slint = "1.5.0"
+
+# --- Protezione in Tempo Reale (Novità v2.0) ---
+# Necessario per monitorare i cambiamenti nei file del sistema
+notify = "6.1.1"
+
+# --- Motore IA e Calcolo Matematico ---
+ort = "2.0.0-rc.11"
+ndarray = "0.15"
+
+# --- Networking e Monitoraggio Traffico ---
+pcap = "1.3.0" # Versione stabile corretta
+
+# --- Client HTTP per Aggiornamenti Database ---
+# Indispensabile per scaricare le nuove definizioni dei virus
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# --- Crittografia e Firme Digitali ---
+sha2 = "0.10"
+
+# --- Sistema e Hardware ---
+sysinfo = "0.30"
+walkdir = "2.3"
+
+# --- Asincronia e Multithreading ---
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+
+# --- Utility, Log e Persistenza Dati ---
+chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[build-dependencies]
+# Compila i file .slint durante la fase di build
+slint-build = "1.5.0"
